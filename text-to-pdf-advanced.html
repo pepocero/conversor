@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conversor Avanzado de Texto a PDF</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .back-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+        }
+        
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .content {
+            padding: 40px;
+        }
+        
+        .upload-area {
+            border: 3px dashed #ddd;
+            border-radius: 15px;
+            padding: 40px;
+            margin: 30px 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #fafafa;
+            text-align: center;
+        }
+        
+        .upload-area:hover {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+        
+        .upload-area.dragover {
+            border-color: #667eea;
+            background: #e8f2ff;
+            transform: scale(1.02);
+        }
+        
+        .upload-icon {
+            font-size: 3rem;
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+        
+        .upload-text {
+            font-size: 1.2rem;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .upload-subtext {
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        .file-info {
+            background: #e8f5e8;
+            border: 1px solid #4caf50;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            display: none;
+        }
+        
+        .file-name {
+            font-weight: bold;
+            color: #2e7d32;
+            margin-bottom: 5px;
+        }
+        
+        .file-size {
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        .convert-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 20px 0;
+            display: none;
+            width: 100%;
+        }
+        
+        .convert-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+        
+        .download-btn {
+            background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 20px 0;
+            display: none;
+            width: 100%;
+        }
+        
+        .download-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(76, 175, 80, 0.3);
+        }
+        
+        .loading {
+            display: none;
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .status {
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 10px;
+            display: none;
+        }
+        
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        #fileInput {
+            display: none;
+        }
+        
+        .supported-formats {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+        
+        .supported-formats h3 {
+            color: #333;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        
+        .format-tags {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .format-tag {
+            background: #667eea;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        
+        .new-conversion-btn {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+            display: none;
+        }
+        
+        .new-conversion-btn:hover {
+            background: #5a6268;
+            transform: translateY(-2px);
+        }
+        
+        .preview-area {
+            margin-top: 20px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            display: none;
+        }
+        
+        .preview-content {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            padding: 15px;
+            background: white;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <a href="index.html" class="back-btn">
+                ← Volver al Inicio
+            </a>
+            <h1>📄 Conversor Avanzado de Texto a PDF</h1>
+            <p>Convierte documentos con formato completo y mejor calidad</p>
+        </div>
+        
+        <div class="content">
+            <div class="upload-area" id="uploadArea">
+                <div class="upload-icon">📁</div>
+                <div class="upload-text">Selecciona un archivo de texto</div>
+                <div class="upload-subtext">o arrastra el archivo aquí</div>
+                <input type="file" id="fileInput" accept=".txt,.docx,.rtf">
+            </div>
+            
+            <div class="file-info" id="fileInfo">
+                <div class="file-name" id="fileName"></div>
+                <div class="file-size" id="fileSize"></div>
+            </div>
+            
+            <div class="preview-area" id="previewArea">
+                <h3>Vista previa del contenido:</h3>
+                <div class="preview-content" id="previewContent"></div>
+            </div>
+            
+            <button class="convert-btn" id="convertBtn">
+                🔄 Convertir a PDF Avanzado
+            </button>
+            
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>Convirtiendo archivo...</p>
+            </div>
+            
+            <div class="status" id="status"></div>
+            
+            <button class="download-btn" id="downloadBtn">
+                📥 Descargar PDF
+            </button>
+            
+            <button class="new-conversion-btn" id="newConversionBtn">
+                🔄 Nueva Conversión
+            </button>
+            
+            <div class="supported-formats">
+                <h3>Formatos soportados</h3>
+                <div class="format-tags">
+                    <span class="format-tag">TXT</span>
+                    <span class="format-tag">DOCX</span>
+                    <span class="format-tag">RTF</span>
+                </div>
+                <p style="margin-top: 10px; font-size: 0.8rem; color: #666; text-align: center;">
+                    Este convertidor avanzado mantiene mejor el formato y estructura del documento original.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Librerías -->
+    <script src="https://unpkg.com/mammoth@1.6.0/mammoth.browser.min.js"></script>
+    <script src="https://unpkg.com/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <script src="https://unpkg.com/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+    
+    <script>
+        console.log('🚀 Conversor Avanzado de Texto a PDF iniciado');
+        
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const fileInfo = document.getElementById('fileInfo');
+        const fileName = document.getElementById('fileName');
+        const fileSize = document.getElementById('fileSize');
+        const convertBtn = document.getElementById('convertBtn');
+        const loading = document.getElementById('loading');
+        const status = document.getElementById('status');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const newConversionBtn = document.getElementById('newConversionBtn');
+        const previewArea = document.getElementById('previewArea');
+        const previewContent = document.getElementById('previewContent');
+        
+        let selectedFile = null;
+        let pdfBlob = null;
+        let htmlContent = '';
+        
+        // Configurar eventos
+        uploadArea.addEventListener('click', () => {
+            console.log('🖱️ Click en área de subida');
+            fileInput.click();
+        });
+        
+        fileInput.addEventListener('change', (e) => {
+            console.log('📁 Archivo seleccionado');
+            handleFileSelect(e.target.files[0]);
+        });
+        
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+        
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+        
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            console.log('🎯 Archivo arrastrado');
+            handleFileSelect(e.dataTransfer.files[0]);
+        });
+        
+        convertBtn.addEventListener('click', () => {
+            console.log('🔄 Iniciando conversión avanzada');
+            convertToPDFAdvanced();
+        });
+        
+        downloadBtn.addEventListener('click', () => {
+            console.log('📥 Descargando PDF');
+            downloadPDF();
+        });
+        
+        newConversionBtn.addEventListener('click', () => {
+            console.log('🔄 Iniciando nueva conversión');
+            startNewConversion();
+        });
+        
+        async function handleFileSelect(file) {
+            if (!file) return;
+            
+            console.log('📄 Archivo:', file.name, 'Tamaño:', file.size);
+            
+            // Validar archivo
+            if (!validateFile(file)) {
+                return;
+            }
+            
+            selectedFile = file;
+            
+            // Mostrar información del archivo
+            fileName.textContent = file.name;
+            fileSize.textContent = formatFileSize(file.size);
+            fileInfo.style.display = 'block';
+            
+            // Procesar contenido y mostrar vista previa
+            try {
+                const content = await readFileContent(file);
+                htmlContent = content;
+                previewContent.innerHTML = content;
+                previewArea.style.display = 'block';
+                
+                // Mostrar botón de conversión
+                convertBtn.style.display = 'block';
+                
+                // Ocultar otros elementos
+                downloadBtn.style.display = 'none';
+                newConversionBtn.style.display = 'none';
+                status.style.display = 'none';
+                
+                console.log('✅ Archivo procesado correctamente');
+            } catch (error) {
+                console.error('❌ Error al procesar archivo:', error);
+                showStatus('Error al procesar el archivo: ' + error.message, 'error');
+            }
+        }
+        
+        function validateFile(file) {
+            const allowedTypes = ['text/plain', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/rtf'];
+            const allowedExtensions = ['txt', 'docx', 'rtf'];
+            const maxSize = 10 * 1024 * 1024; // 10MB
+            
+            const fileExtension = file.name.split('.').pop().toLowerCase();
+            
+            if (file.size > maxSize) {
+                showStatus('El archivo es demasiado grande. Máximo 10MB', 'error');
+                return false;
+            }
+            
+            if (!allowedTypes.includes(file.type) && !allowedExtensions.includes(fileExtension)) {
+                showStatus('Tipo de archivo no soportado. Formatos permitidos: TXT, DOCX, RTF', 'error');
+                return false;
+            }
+            
+            return true;
+        }
+        
+        async function readFileContent(file) {
+            try {
+                let content = '';
+                
+                if (file.name.endsWith('.docx')) {
+                    // Usar mammoth.js para convertir DOCX a HTML
+                    console.log('📄 Procesando archivo DOCX con mammoth.js...');
+                    const result = await mammoth.convertToHtml({arrayBuffer: await file.arrayBuffer()});
+                    content = result.value;
+                    
+                    // Mostrar advertencias si las hay
+                    if (result.messages.length > 0) {
+                        console.warn('⚠️ Advertencias de mammoth:', result.messages);
+                    }
+                    
+                } else if (file.name.endsWith('.rtf')) {
+                    // Para RTF, leer como texto y convertir a HTML básico
+                    content = await readAsText(file);
+                    content = content.replace(/\{[^}]*\}/g, ''); // Remover comandos RTF
+                    content = content.replace(/\\[a-z]+\d*\s?/g, ''); // Remover comandos RTF
+                    content = '<div>' + content.replace(/\n/g, '<br>') + '</div>';
+                    
+                } else if (file.name.endsWith('.txt')) {
+                    // Para TXT, leer como texto y convertir a HTML básico
+                    content = await readAsText(file, 'UTF-8');
+                    content = '<div>' + content.replace(/\n/g, '<br>') + '</div>';
+                    
+                } else {
+                    throw new Error('Tipo de archivo no soportado');
+                }
+                
+                console.log('📖 Contenido HTML generado:', content.length, 'caracteres');
+                return content;
+                
+            } catch (error) {
+                console.error('❌ Error al leer archivo:', error);
+                throw new Error('Error al leer el archivo: ' + error.message);
+            }
+        }
+        
+        function readAsText(file, encoding = null) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (e) => resolve(e.target.result);
+                reader.onerror = () => reject(new Error('Error al leer el archivo'));
+                
+                if (encoding) {
+                    reader.readAsText(file, encoding);
+                } else {
+                    reader.readAsText(file);
+                }
+            });
+        }
+        
+        async function convertToPDFAdvanced() {
+            if (!selectedFile) return;
+            
+            console.log('🔄 Convirtiendo archivo a PDF avanzado...');
+            
+            // Mostrar loading
+            convertBtn.style.display = 'none';
+            loading.style.display = 'block';
+            status.style.display = 'none';
+            
+            try {
+                // Crear un elemento temporal para renderizar el HTML
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = htmlContent;
+                tempDiv.style.cssText = `
+                    width: 210mm;
+                    min-height: 297mm;
+                    padding: 20mm;
+                    font-family: Arial, sans-serif;
+                    font-size: 12pt;
+                    line-height: 1.5;
+                    background: white;
+                    color: black;
+                    position: absolute;
+                    top: -9999px;
+                    left: -9999px;
+                `;
+                
+                // Agregar estilos CSS para mejor formato
+                const style = document.createElement('style');
+                style.textContent = `
+                    h1, h2, h3, h4, h5, h6 { 
+                        color: #333; 
+                        margin-top: 20px; 
+                        margin-bottom: 10px; 
+                    }
+                    h1 { font-size: 24pt; }
+                    h2 { font-size: 20pt; }
+                    h3 { font-size: 16pt; }
+                    p { margin-bottom: 10px; }
+                    strong, b { font-weight: bold; }
+                    em, i { font-style: italic; }
+                    u { text-decoration: underline; }
+                    ul, ol { margin-left: 20px; }
+                    li { margin-bottom: 5px; }
+                    img { max-width: 100%; height: auto; }
+                `;
+                tempDiv.appendChild(style);
+                
+                document.body.appendChild(tempDiv);
+                
+                // Usar html2canvas para convertir HTML a imagen
+                const canvas = await html2canvas(tempDiv, {
+                    scale: 2,
+                    useCORS: true,
+                    allowTaint: true,
+                    backgroundColor: '#ffffff'
+                });
+                
+                // Remover el elemento temporal
+                document.body.removeChild(tempDiv);
+                
+                // Crear PDF con jsPDF
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF('p', 'mm', 'a4');
+                
+                const imgData = canvas.toDataURL('image/png');
+                const imgWidth = 210;
+                const pageHeight = 295;
+                const imgHeight = (canvas.height * imgWidth) / canvas.width;
+                let heightLeft = imgHeight;
+                
+                let position = 0;
+                
+                pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                heightLeft -= pageHeight;
+                
+                while (heightLeft >= 0) {
+                    position = heightLeft - imgHeight;
+                    pdf.addPage();
+                    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                    heightLeft -= pageHeight;
+                }
+                
+                // Generar PDF
+                pdfBlob = pdf.output('blob');
+                
+                console.log('✅ PDF avanzado generado exitosamente');
+                
+                // Mostrar éxito
+                showStatus('¡Archivo convertido a PDF avanzado exitosamente!', 'success');
+                downloadBtn.style.display = 'block';
+                newConversionBtn.style.display = 'block';
+                
+            } catch (error) {
+                console.error('❌ Error al convertir:', error);
+                showStatus('Error al convertir el archivo: ' + error.message, 'error');
+                convertBtn.style.display = 'block';
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+        
+        function downloadPDF() {
+            if (!pdfBlob) return;
+            
+            const url = URL.createObjectURL(pdfBlob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = selectedFile.name.replace(/\.[^/.]+$/, '') + '_advanced.pdf';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            console.log('📥 PDF avanzado descargado');
+        }
+        
+        function startNewConversion() {
+            // Resetear todo
+            selectedFile = null;
+            pdfBlob = null;
+            htmlContent = '';
+            
+            // Limpiar input
+            fileInput.value = '';
+            
+            // Ocultar elementos
+            fileInfo.style.display = 'none';
+            previewArea.style.display = 'none';
+            convertBtn.style.display = 'none';
+            downloadBtn.style.display = 'none';
+            newConversionBtn.style.display = 'none';
+            status.style.display = 'none';
+            loading.style.display = 'none';
+            
+            console.log('🔄 Nueva conversión iniciada');
+        }
+        
+        function showStatus(message, type) {
+            status.textContent = message;
+            status.className = `status ${type}`;
+            status.style.display = 'block';
+        }
+        
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+        
+        console.log('✅ Conversor avanzado inicializado correctamente');
+    </script>
+</body>
+</html>
