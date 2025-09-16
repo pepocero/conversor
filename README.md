@@ -139,4 +139,4 @@ Si tienes problemas o preguntas:
 
 ---
 
-**Desarrollado con ❤️ por [pepocero](https://github.com/pepocero)**
+**Desarrollado con ❤️ por [Pepocero](mailto:pepocero@gmail.com)**
