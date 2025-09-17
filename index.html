@@ -298,6 +298,12 @@
                 flex-direction: column;
                 text-align: center;
             }
+            
+            /* Responsive para la información de diferencias */
+            .converter-card div[style*="grid-template-columns: 1fr 1fr"] {
+                grid-template-columns: 1fr !important;
+                gap: 10px !important;
+            }
         }
     </style>
 </head>
@@ -357,7 +363,35 @@
                     <div class="converter-card">
                         <div class="converter-icon">📄</div>
                         <h3 class="converter-title">Texto a PDF</h3>
-                        <p class="converter-description">Convierte cualquier archivo de texto (TXT, DOCX, RTF) a formato PDF de manera rápida y manteniendo el formato original.</p>
+                        <p class="converter-description">Convierte cualquier archivo de texto (TXT, DOCX, RTF) a formato PDF. Elige la versión que mejor se adapte a tus necesidades:</p>
+                        
+                        <!-- Información de diferencias -->
+                        <div style="margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 10px; border-left: 4px solid #667eea;">
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                                <div>
+                                    <h4 style="color: #667eea; margin-bottom: 8px; font-size: 0.9rem;">🔧 Básico</h4>
+                                    <ul style="font-size: 0.8rem; color: #666; margin: 0; padding-left: 15px;">
+                                        <li>Conversión rápida</li>
+                                        <li>Archivos PDF pequeños</li>
+                                        <li>Formato básico preservado</li>
+                                        <li>Imágenes como texto</li>
+                                    </ul>
+                                </div>
+                                <div>
+                                    <h4 style="color: #4caf50; margin-bottom: 8px; font-size: 0.9rem;">🚀 Avanzado</h4>
+                                    <ul style="font-size: 0.8rem; color: #666; margin: 0; padding-left: 15px;">
+                                        <li>Formato visual completo</li>
+                                        <li>Imágenes reales incluidas</li>
+                                        <li>Colores y estilos preservados</li>
+                                        <li>Calidad profesional</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <p style="font-size: 0.75rem; color: #888; text-align: center; margin: 0; font-style: italic;">
+                                💡 Recomendación: Básico para documentos de texto simple, Avanzado para documentos con imágenes y formato complejo
+                            </p>
+                        </div>
+                        
                         <div style="display: flex; gap: 10px; margin-top: 15px;">
                             <button class="converter-btn" onclick="openConverter('text-to-pdf')" style="flex: 1; padding: 10px 15px; font-size: 0.9rem;">
                                 Básico
