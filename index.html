@@ -6,556 +6,674 @@
     <title>Conversor Universal - Herramientas de Conversión Online</title>
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
     <link rel="icon" type="image/x-icon" href="favicon.ico">
+    
+    <!-- Bibliotecas Globales -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+    <script src="https://unpkg.com/mammoth@1.6.0/mammoth.browser.min.js"></script>
+    <script src="https://unpkg.com/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <script src="https://unpkg.com/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.umd.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/docx-preview@0.3.2/dist/docx-preview.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lamejs/1.2.1/lame.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/docx-preview@0.3.2/dist/docx-preview.css">
+    <script>
+        if (typeof pdfjsLib !== 'undefined') {
+            pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        }
+    </script>
+
+    <style id="tool-styles"></style>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            color: #333;
-        }
-        
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 20px;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; color: #333; overflow-x: hidden; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
         
         /* Header */
-        .header {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
+        .header { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); box-shadow: 0 2px 20px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 100; }
+        .header-content { display: flex; justify-content: space-between; align-items: center; padding: 20px 0; }
+        .logo { font-size: 1.8rem; font-weight: bold; color: #667eea; cursor: pointer; }
+        .nav { display: flex; gap: 30px; }
+        .nav a { text-decoration: none; color: #333; font-weight: 500; transition: color 0.3s ease; }
+        .nav a:hover { color: #667eea; }
         
-        .header-content {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 20px 0;
-        }
+        /* Hero */
+        .hero { text-align: center; padding: 80px 0; color: white; }
+        .hero h1 { font-size: 3.5rem; margin-bottom: 20px; }
+        .hero p { font-size: 1.3rem; margin-bottom: 40px; opacity: 0.9; max-width: 600px; margin-left: auto; margin-right: auto; }
         
-        .logo {
-            font-size: 1.8rem;
-            font-weight: bold;
-            color: #667eea;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .nav {
-            display: flex;
-            gap: 30px;
-        }
-        
-        .nav a {
-            text-decoration: none;
-            color: #333;
-            font-weight: 500;
-            transition: color 0.3s ease;
-        }
-        
-        .nav a:hover {
-            color: #667eea;
-        }
-        
-        /* Hero Section */
-        .hero {
-            text-align: center;
-            padding: 80px 0;
-            color: white;
-        }
-        
-        .hero h1 {
-            font-size: 3.5rem;
-            margin-bottom: 20px;
-            font-weight: 700;
-        }
-        
-        .hero p {
-            font-size: 1.3rem;
-            margin-bottom: 40px;
-            opacity: 0.9;
-            max-width: 600px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-        
-        .hero-stats {
-            display: flex;
-            justify-content: center;
-            gap: 60px;
-            margin-top: 60px;
-        }
-        
-        .stat {
-            text-align: center;
-        }
-        
-        .stat-number {
-            font-size: 2.5rem;
-            font-weight: bold;
-            margin-bottom: 10px;
-        }
-        
-        .stat-label {
-            font-size: 1rem;
-            opacity: 0.8;
-        }
-        
-        /* Main Content */
-        .main-content {
-            background: white;
-            border-radius: 30px 30px 0 0;
-            margin-top: 60px;
-            padding: 60px 0;
-        }
-        
-        .section {
-            margin-bottom: 80px;
-        }
-        
-        .section-header {
-            text-align: center;
-            margin-bottom: 50px;
-        }
-        
-        .section-title {
-            font-size: 2.5rem;
-            color: #333;
-            margin-bottom: 15px;
-        }
-        
-        .section-subtitle {
-            font-size: 1.2rem;
-            color: #666;
-            max-width: 600px;
-            margin: 0 auto;
-        }
-        
-        /* Converter Cards */
-        .converter-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-            gap: 30px;
-            margin-top: 40px;
-        }
-        
-        .converter-card {
-            background: white;
-            border-radius: 20px;
-            padding: 40px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-            transition: all 0.3s ease;
-            border: 2px solid transparent;
-        }
-        
-        .converter-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
-            border-color: #667eea;
-        }
-        
-        .converter-icon {
-            font-size: 3rem;
-            margin-bottom: 20px;
-            text-align: center;
-        }
-        
-        .converter-title {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: #333;
-            margin-bottom: 15px;
-            text-align: center;
-        }
-        
-        .converter-description {
-            color: #666;
-            text-align: center;
-            margin-bottom: 30px;
-            line-height: 1.6;
-        }
-        
-        .converter-btn {
-            width: 100%;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            padding: 15px 30px;
-            border-radius: 50px;
-            font-size: 1.1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-        
-        .converter-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
-        }
-        
-        .converter-btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
-        }
-        
-        /* Features Section */
-        .features {
-            background: #f8f9fa;
-            padding: 80px 0;
-            margin: 60px 0;
-        }
-        
-        .features-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 40px;
-        }
-        
-        .feature {
-            text-align: center;
-        }
-        
-        .feature-icon {
-            font-size: 2.5rem;
-            margin-bottom: 20px;
-        }
-        
-        .feature-title {
-            font-size: 1.3rem;
-            font-weight: bold;
-            color: #333;
-            margin-bottom: 15px;
-        }
-        
-        .feature-description {
-            color: #666;
-            line-height: 1.6;
-        }
+        /* Grid */
+        .main-content { background: white; border-radius: 30px 30px 0 0; padding: 60px 0; margin-top: 40px; min-height: 600px; }
+        .converter-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; margin-top: 40px; }
+        .converter-card { background: white; border-radius: 20px; padding: 40px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); transition: all 0.3s ease; border: 2px solid transparent; text-align: center; }
+        .converter-card:hover { transform: translateY(-5px); border-color: #667eea; box-shadow: 0 20px 40px rgba(102, 126, 234, 0.2); }
+        .converter-icon { font-size: 3rem; margin-bottom: 20px; }
+        .converter-title { font-size: 1.5rem; font-weight: bold; margin-bottom: 15px; }
+        .converter-description { color: #666; margin-bottom: 30px; line-height: 1.6; font-size: 0.95rem; }
+        .converter-btn { width: 100%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 15px; border-radius: 50px; font-weight: 600; cursor: pointer; transition: all 0.3s ease; }
+        .converter-btn:hover { box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3); }
+
+        /* Loader */
+        #global-loader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); z-index: 9999; display: none; justify-content: center; align-items: center; flex-direction: column; }
+        .spinner { width: 50px; height: 50px; border: 5px solid #f3f3f3; border-top: 5px solid #667eea; border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* Transitions */
+        #home-view, #tool-view { transition: opacity 0.3s ease; }
         
         /* Footer */
-        .footer {
-            background: #333;
-            color: white;
-            text-align: center;
-            padding: 40px 0;
-        }
-        
-        .footer-content {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 20px;
-        }
-        
-        .footer-links {
-            display: flex;
-            gap: 30px;
-        }
-        
-        .footer-links a {
-            color: white;
-            text-decoration: none;
-            transition: color 0.3s ease;
-        }
-        
-        .footer-links a:hover {
-            color: #667eea;
-        }
-        
-        /* Responsive */
+        .footer { background: #333; color: white; padding: 40px 0; text-align: center; }
+        .footer a { color: #667eea; text-decoration: none; }
+
         @media (max-width: 768px) {
-            .hero h1 {
-                font-size: 2.5rem;
-            }
-            
-            .hero-stats {
-                flex-direction: column;
-                gap: 30px;
-            }
-            
-            .nav {
-                display: none;
-            }
-            
-            .converter-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .footer-content {
-                flex-direction: column;
-                text-align: center;
-            }
-            
-            /* Responsive para la información de diferencias */
-            .converter-card div[style*="grid-template-columns: 1fr 1fr"] {
-                grid-template-columns: 1fr !important;
-                gap: 10px !important;
-            }
+            .hero h1 { font-size: 2.5rem; }
+            .converter-grid { grid-template-columns: 1fr; }
         }
     </style>
 </head>
 <body>
-    <!-- Header -->
     <header class="header">
         <div class="container">
             <div class="header-content">
-                <div class="logo">
-                    🔄 Conversor Universal
-                </div>
+                <div class="logo" onclick="goHome()">🔄 Conversor Universal</div>
                 <nav class="nav">
-                    <a href="https://candeivid.com/utilidades.php">Inicio</a>
-                    <a href="#convertidores">Convertidores</a>
-                    <a href="#caracteristicas">Características</a>
-                    <a href="#contacto">Contacto</a>
+                    <a href="#" onclick="goHome()">Inicio</a>
+                    <a href="#convertidores">Herramientas</a>
                 </nav>
             </div>
         </div>
     </header>
 
-    <!-- Hero Section -->
-    <section class="hero" id="inicio">
-        <div class="container">
-            <h1>Convierte Todo, En Un Solo Lugar</h1>
-            <p>La plataforma más completa para convertir documentos, imágenes, audio y más. Rápido, seguro y completamente gratuito.</p>
-            
-            <div class="hero-stats">
-                <div class="stat">
-                    <div class="stat-number">10+</div>
-                    <div class="stat-label">Formatos Soportados</div>
-                </div>
-                <div class="stat">
-                    <div class="stat-number">100%</div>
-                    <div class="stat-label">Gratuito</div>
-                </div>
-                <div class="stat">
-                    <div class="stat-number">∞</div>
-                    <div class="stat-label">Conversiones</div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Main Content -->
-    <main class="main-content">
-        <div class="container">
-            <!-- Convertidores Section -->
-            <section class="section" id="convertidores">
-                <div class="section-header">
-                    <h2 class="section-title">Nuestros Convertidores</h2>
-                    <p class="section-subtitle">Selecciona el tipo de conversión que necesitas. Cada herramienta está optimizada para ofrecerte los mejores resultados.</p>
-                </div>
-                
-                <div class="converter-grid">
-                    <!-- Texto a PDF -->
-                    <div class="converter-card">
-                        <div class="converter-icon">📄</div>
-                        <h3 class="converter-title">Texto a PDF</h3>
-                        <p class="converter-description">Convierte cualquier archivo de texto (TXT, DOCX, RTF) a formato PDF. Elige la versión que mejor se adapte a tus necesidades:</p>
-                        
-                        <!-- Información de diferencias -->
-                        <div style="margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 10px; border-left: 4px solid #667eea;">
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
-                                <div>
-                                    <h4 style="color: #667eea; margin-bottom: 8px; font-size: 0.9rem;">🔧 Básico</h4>
-                                    <ul style="font-size: 0.8rem; color: #666; margin: 0; padding-left: 15px;">
-                                        <li>Conversión rápida</li>
-                                        <li>Archivos PDF pequeños</li>
-                                        <li>Formato básico preservado</li>
-                                        <li>Imágenes como texto</li>
-                                    </ul>
-                                </div>
-                                <div>
-                                    <h4 style="color: #4caf50; margin-bottom: 8px; font-size: 0.9rem;">🚀 Avanzado</h4>
-                                    <ul style="font-size: 0.8rem; color: #666; margin: 0; padding-left: 15px;">
-                                        <li>Formato visual completo</li>
-                                        <li>Imágenes reales incluidas</li>
-                                        <li>Colores y estilos preservados</li>
-                                        <li>Calidad profesional</li>
-                                    </ul>
-                                </div>
-                            </div>
-                            <p style="font-size: 0.75rem; color: #888; text-align: center; margin: 0; font-style: italic;">
-                                💡 Recomendación: Básico para documentos de texto simple, Avanzado para documentos con imágenes y formato complejo
-                            </p>
-                        </div>
-                        
-                        <div style="display: flex; gap: 10px; margin-top: 15px;">
-                            <button class="converter-btn" onclick="openConverter('text-to-pdf')" style="flex: 1; padding: 10px 15px; font-size: 0.9rem;">
-                                Básico
-                            </button>
-                            <button class="converter-btn" onclick="openConverter('text-to-pdf-advanced')" style="flex: 1; padding: 10px 15px; font-size: 0.9rem; background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);">
-                                Avanzado
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <!-- PDF a Word -->
-                    <div class="converter-card">
-                        <div class="converter-icon">📝</div>
-                        <h3 class="converter-title">PDF a Word</h3>
-                        <p class="converter-description">Extrae el contenido de archivos PDF y conviértelos a documentos Word (.docx) editables. Procesamiento 100% en tu navegador.</p>
-                        <button class="converter-btn" onclick="openConverter('pdf-to-word')">
-                            Convertir
-                        </button>
-                    </div>
-                    
-                    <!-- JPG a PDF -->
-                    <div class="converter-card">
-                        <div class="converter-icon">🖼️</div>
-                        <h3 class="converter-title">JPG a PDF</h3>
-                        <p class="converter-description">Convierte imágenes JPG, JPEG y PNG a archivos PDF. Soporta múltiples imágenes, cada una en una página del PDF.</p>
-                        <button class="converter-btn" onclick="openConverter('jpg-to-pdf')">
-                            Convertir
-                        </button>
-                    </div>
-
-                    <!-- Unir PDF -->
-                    <div class="converter-card">
-                        <div class="converter-icon">📑</div>
-                        <h3 class="converter-title">Unir PDF</h3>
-                        <p class="converter-description">Combina varios archivos PDF en un solo documento de forma rápida y sencilla. Permite elegir el orden de los archivos.</p>
-                        <button class="converter-btn" onclick="openConverter('merge-pdf')">
-                            Unir
-                        </button>
-                    </div>
-                    
-                    <!-- Conversor de Audio -->
-                    <div class="converter-card">
-                        <div class="converter-icon">🎵</div>
-                        <h3 class="converter-title">Conversor de Audio</h3>
-                        <p class="converter-description">Convierte entre formatos de audio: MP3, WAV, OGG, FLAC, M4A, WebM. Salida en MP3 o WAV.</p>
-                        <button class="converter-btn" onclick="openConverter('audio-converter')">
-                            Convertir
-                        </button>
-                    </div>
+    <div id="view-wrapper">
+        <div id="home-view">
+            <section class="hero">
+                <div class="container">
+                    <h1>Convierte Todo, Rápido y Seguro</h1>
+                    <p>La plataforma premium para tus archivos. Sin límites, sin registros, directamente en tu navegador.</p>
                 </div>
             </section>
+            <main class="main-content" id="convertidores">
+                <div class="container">
+                    <div class="converter-grid">
+                        <div class="converter-card">
+                            <div class="converter-icon">📄</div>
+                            <h3 class="converter-title">Texto a PDF</h3>
+                            <p class="converter-description">Convierte TXT, DOCX y RTF a PDF. Incluye modo avanzado para preservar el diseño original.</p>
+                            <button class="converter-btn" onclick="openConverter('text-to-pdf')">Convertir</button>
+                        </div>
+                        <div class="converter-card">
+                            <div class="converter-icon">📝</div>
+                            <h3 class="converter-title">PDF a Word</h3>
+                            <p class="converter-description">Extrae texto o imágenes de tus PDFs y conviértelos a documentos Word editables.</p>
+                            <button class="converter-btn" onclick="openConverter('pdf-to-word')">Convertir</button>
+                        </div>
+                        <div class="converter-card">
+                            <div class="converter-icon">🖼️</div>
+                            <h3 class="converter-title">JPG a PDF</h3>
+                            <p class="converter-description">Convierte una o varias imágenes en un solo documento PDF con alta calidad.</p>
+                            <button class="converter-btn" onclick="openConverter('jpg-to-pdf')">Convertir</button>
+                        </div>
+                        <div class="converter-card">
+                            <div class="converter-icon">📑</div>
+                            <h3 class="converter-title">Unir PDF</h3>
+                            <p class="converter-description">Combina múltiples archivos PDF y elige el orden exacto de las páginas.</p>
+                            <button class="converter-btn" onclick="openConverter('merge-pdf')">Unir</button>
+                        </div>
+                        <div class="converter-card">
+                            <div class="converter-icon">🎵</div>
+                            <h3 class="converter-title">Audio</h3>
+                            <p class="converter-description">Convierte entre MP3, WAV y otros formatos sin perder calidad sonora.</p>
+                            <button class="converter-btn" onclick="openConverter('audio-converter')">Convertir</button>
+                        </div>
+                    </div>
+                </div>
+            </main>
         </div>
-    </main>
+        <div id="tool-view" style="opacity: 0; display: none;"></div>
+    </div>
 
-    <!-- Features Section -->
-    <section class="features" id="caracteristicas">
+    <footer class="footer">
         <div class="container">
-            <div class="section-header">
-                <h2 class="section-title">¿Por Qué Elegirnos?</h2>
-                <p class="section-subtitle">Ofrecemos las mejores herramientas de conversión con características únicas que nos distinguen de la competencia.</p>
-            </div>
-            
-            <div class="features-grid">
-                <div class="feature">
-                    <div class="feature-icon">⚡</div>
-                    <h3 class="feature-title">Ultra Rápido</h3>
-                    <p class="feature-description">Nuestros algoritmos optimizados procesan tus archivos en segundos, sin esperas innecesarias.</p>
-                </div>
-                
-                <div class="feature">
-                    <div class="feature-icon">🔒</div>
-                    <h3 class="feature-title">100% Seguro</h3>
-                    <p class="feature-description">Tus archivos se procesan localmente en tu navegador. Nunca subimos tus documentos a nuestros servidores.</p>
-                </div>
-                
-                <div class="feature">
-                    <div class="feature-icon">💯</div>
-                    <h3 class="feature-title">Calidad Premium</h3>
-                    <p class="feature-description">Mantenemos la máxima calidad en todas las conversiones, preservando el formato y la fidelidad original.</p>
-                </div>
-                
-                <div class="feature">
-                    <div class="feature-icon">📱</div>
-                    <h3 class="feature-title">Multiplataforma</h3>
-                    <p class="feature-description">Funciona perfectamente en cualquier dispositivo: ordenador, tablet o móvil. Sin instalaciones necesarias.</p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Footer -->
-    <footer class="footer" id="contacto">
-        <div class="container">
-            <div class="footer-content">
-                <div class="logo">
-                    🔄 Conversor Universal
-                </div>
-                <div class="footer-links">
-                    <a href="#inicio">Inicio</a>
-                    <a href="#convertidores">Convertidores</a>
-                    <a href="#caracteristicas">Características</a>
-                    <a href="#contacto">Contacto</a>
-                </div>
-            </div>
-            <p style="margin-top: 20px; opacity: 0.7;">© 2024 Conversor Universal. Creado por <a href="mailto:pepocero@gmail.com" style="color: #667eea; text-decoration: none;">Pepocero</a></p>
+            <p>© 2024 Conversor Universal. Diseñado con ❤️ por <a href="mailto:info@carlinitools.com" style="color: #667eea; text-decoration: none; font-weight: bold;">CarliniTools</a>.</p>
         </div>
     </footer>
 
-    <script>
-        // Smooth scrolling para los enlaces de navegación
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function (e) {
-                e.preventDefault();
-                const target = document.querySelector(this.getAttribute('href'));
-                if (target) {
-                    target.scrollIntoView({
-                        behavior: 'smooth',
-                        block: 'start'
+    <div id="global-loader">
+        <div class="spinner"></div>
+        <p style="margin-top: 15px; color: #667eea; font-weight: bold;">Cargando herramienta...</p>
+    </div>
+
+    <!-- TEMPLATES -->
+
+    <template id="template-text-to-pdf">
+        <style>
+            .mode-selector { display: flex; gap: 15px; margin: 20px 0; background: #f8f9fa; padding: 15px; border-radius: 12px; }
+            .mode-option { flex: 1; padding: 15px; border-radius: 10px; border: 2px solid transparent; cursor: pointer; background: white; text-align: center; transition: 0.3s; }
+            .mode-option.active { border-color: #667eea; background: #f0f4ff; }
+            .preview-area { margin-top: 20px; padding: 20px; background: #e9ecef; border-radius: 10px; display: none; }
+            .preview-content { max-height: 500px; overflow-y: auto; border: 1px solid #ddd; background: #888; border-radius: 5px; }
+            
+            /* Estilos para el contenido básico (Mammoth) */
+            .mammoth-content { background: white; padding: 40px; line-height: 1.6; }
+            .mammoth-content img { max-width: 100%; height: auto; display: block; margin: 15px auto; }
+            
+            .upload-area { border: 3px dashed #ddd; border-radius: 15px; padding: 40px; cursor: pointer; text-align: center; transition: 0.3s; }
+            .upload-area:hover { border-color: #667eea; background: #f0f4ff; }
+            .status { margin: 20px 0; padding: 15px; border-radius: 10px; display: none; }
+            .status.success { background: #d4edda; color: #155724; }
+            .status.error { background: #f8d7da; color: #721c24; }
+            .convert-btn, .download-btn, .new-conversion-btn { width: 100%; border: none; padding: 15px; border-radius: 10px; cursor: pointer; margin-top: 10px; font-weight: 600; display: none; }
+            .convert-btn { background: #667eea; color: white; }
+            .download-btn { background: #4caf50; color: white; }
+            .new-conversion-btn { background: #6c757d; color: white; }
+            #fileInput { display: none; }
+            
+            /* Contenedor oculto para renderizado de alta fidelidad */
+            #render-ghost { position: absolute; left: -9999px; top: 0; width: 794px; background: #f0f0f0; }
+        </style>
+        <div class="container" style="background: white; padding: 40px; border-radius: 20px; margin-top: 40px; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
+            <button class="back-btn" onclick="goHome()" style="background:none; border:none; cursor:pointer; color:#667eea; font-weight:bold; margin-bottom:20px;">← Volver</button>
+            <h2 style="margin-bottom: 20px;">📄 Texto a PDF</h2>
+            <div class="upload-area" id="uploadArea">
+                <div style="font-size: 3rem;">📁</div>
+                <div>Selecciona o arrastra TXT, DOCX o RTF</div>
+                <input type="file" id="fileInput" accept=".txt,.docx,.rtf">
+            </div>
+            <div id="fileInfo" style="display:none; margin-top:20px; padding:15px; background:#f8f9fa; border-radius:10px;">
+                <b id="fileName"></b> <span id="fileSize"></span>
+                <div class="mode-selector" id="modeSelector">
+                    <div class="mode-option active" data-mode="basic"><b>Básico</b><br><small>Rápido (Sin saltos de página)</small></div>
+                    <div class="mode-option" data-mode="advanced"><b>Avanzado</b><br><small>Fiel a Word (Con saltos de página)</small></div>
+                </div>
+            </div>
+            <div id="previewArea" class="preview-area">
+                <div id="previewContent" class="preview-content"></div>
+            </div>
+            <button id="convertBtn" class="convert-btn">🔄 Convertir a PDF</button>
+            <div id="loading" style="display:none; text-align:center; margin:20px 0;"><div class="spinner" style="margin:0 auto"></div><p id="loadingTask">Renderizando páginas...</p></div>
+            <div id="status" class="status"></div>
+            <button id="downloadBtn" class="download-btn">📥 Descargar PDF</button>
+            <button id="newConversionBtn" class="new-conversion-btn">✨ Nueva Conversión</button>
+            
+            <div id="render-ghost"></div>
+        </div>
+        <script>
+            (function() {
+                const uploadArea = document.getElementById('uploadArea'), fileInput = document.getElementById('fileInput'), fileInfo = document.getElementById('fileInfo'), fileName = document.getElementById('fileName'), fileSize = document.getElementById('fileSize'), convertBtn = document.getElementById('convertBtn'), downloadBtn = document.getElementById('downloadBtn'), newConversionBtn = document.getElementById('newConversionBtn'), status = document.getElementById('status'), previewArea = document.getElementById('previewArea'), previewContent = document.getElementById('previewContent');
+                let selectedFile = null, pdfBlob = null, currentMode = 'basic';
+                
+                uploadArea.onclick = () => fileInput.click();
+                fileInput.onchange = (e) => handleFile(e.target.files[0]);
+                
+                document.querySelectorAll('.mode-option').forEach(opt => opt.onclick = async () => {
+                    document.querySelectorAll('.mode-option').forEach(o => o.classList.remove('active'));
+                    opt.classList.add('active'); 
+                    currentMode = opt.dataset.mode;
+                    convertBtn.textContent = `🔄 Convertir a PDF (${currentMode === 'basic' ? 'Básico' : 'Avanzado'})`;
+                    if (selectedFile) await renderPreview();
+                });
+
+                async function handleFile(file) {
+                    if (!file) return; selectedFile = file;
+                    fileName.textContent = file.name; fileSize.textContent = (file.size/1024).toFixed(1) + " KB";
+                    fileInfo.style.display = 'block'; convertBtn.style.display = 'block';
+                    previewArea.style.display = 'block';
+                    await renderPreview();
+                }
+
+                async function renderPreview() {
+                    if (!selectedFile) return;
+                    previewContent.innerHTML = '<div style="text-align:center; padding:20px; color:white;">Generando vista previa...</div>';
+                    try {
+                        const buffer = await selectedFile.arrayBuffer();
+                        if (selectedFile.name.endsWith('.docx')) {
+                            if (currentMode === 'advanced') {
+                                await docx.renderAsync(buffer, previewContent, null, {
+                                    inWrapper: true,
+                                    ignoreLastRenderedPageBreak: false,
+                                    experimental: true,
+                                    trimXmlDeclaration: true
+                                });
+                            } else {
+                                const res = await mammoth.convertToHtml({arrayBuffer: buffer});
+                                previewContent.innerHTML = `<div class="mammoth-content">${res.value}</div>`;
+                            }
+                        } else {
+                            const text = await selectedFile.text();
+                            previewContent.innerHTML = `<div class="mammoth-content" style="white-space:pre-wrap;">${text}</div>`;
+                        }
+                        convertBtn.textContent = `🔄 Convertir a PDF (${currentMode === 'basic' ? 'Básico' : 'Avanzado'})`;
+                    } catch(e) { console.error(e); previewContent.innerHTML = '<div style="background:white;padding:20px;">Error al cargar vista previa.</div>'; }
+                }
+
+                convertBtn.onclick = async () => {
+                    convertBtn.style.display = 'none'; 
+                    document.getElementById('loading').style.display='block';
+                    status.style.display = 'none';
+                    
+                    try {
+                        if (currentMode === 'basic') {
+                            const pdfDoc = await PDFLib.PDFDocument.create();
+                            const font = await pdfDoc.embedFont(PDFLib.StandardFonts.Helvetica);
+                            const fontSize = 11;
+                            const margin = 50, pageWidth = 595, pageHeight = 842, maxWidth = pageWidth - (margin * 2);
+                            
+                            const textSource = previewContent.querySelector('.mammoth-content') || previewContent;
+                            const fullText = textSource.textContent.replace(/[^\x00-\x7F\xA0-\xFF]/g, ' ');
+                            
+                            const pixelsPerChar = fontSize * 0.55; 
+                            const maxChars = Math.floor(maxWidth / pixelsPerChar);
+                            const paragraphs = fullText.split('\n');
+                            const lines = [];
+                            for (const p of paragraphs) {
+                                if (p.trim() === '') { lines.push(''); continue; }
+                                const words = p.split(' ');
+                                let currentLine = '';
+                                for (const word of words) {
+                                    if ((currentLine + word).length > maxChars) {
+                                        lines.push(currentLine.trim());
+                                        currentLine = word + ' ';
+                                    } else {
+                                        currentLine += word + ' ';
+                                    }
+                                }
+                                if (currentLine) lines.push(currentLine.trim());
+                            }
+                            
+                            let page = pdfDoc.addPage([pageWidth, pageHeight]);
+                            let y = pageHeight - margin;
+
+                            for (const line of lines) {
+                                if (y < margin + fontSize) {
+                                    page = pdfDoc.addPage([pageWidth, pageHeight]);
+                                    y = pageHeight - margin;
+                                }
+                                if (line !== '') page.drawText(line, { x: margin, y: y - fontSize, size: fontSize, font: font });
+                                y -= fontSize * 1.4;
+                            }
+                            pdfBlob = new Blob([await pdfDoc.save()], {type:'application/pdf'});
+                        } else {
+                            const ghost = document.getElementById('render-ghost');
+                            ghost.innerHTML = '';
+                            
+                            const buffer = await selectedFile.arrayBuffer();
+                            await docx.renderAsync(buffer, ghost, null, {
+                                inWrapper: true,
+                                ignoreLastRenderedPageBreak: false,
+                                experimental: true
+                            });
+
+                            const ghostImages = ghost.getElementsByTagName('img');
+                            await Promise.all(Array.from(ghostImages).map(img => {
+                                if (img.complete) return Promise.resolve();
+                                return new Promise(resolve => { img.onload = resolve; img.onerror = resolve; });
+                            }));
+
+                            const pageSections = ghost.querySelectorAll('section.docx');
+                            if (pageSections.length === 0) throw new Error("No se detectaron páginas en el documento.");
+
+                            const pdf = new jspdf.jsPDF('p', 'mm', 'a4');
+                            const a4Width = 210, a4Height = 297;
+
+                            for (let i = 0; i < pageSections.length; i++) {
+                                document.getElementById('loadingTask').textContent = `Procesando sección ${i+1} de ${pageSections.length}...`;
+                                
+                                const canvas = await html2canvas(pageSections[i], {
+                                    scale: 2,
+                                    useCORS: true,
+                                    allowTaint: true,
+                                    backgroundColor: '#ffffff',
+                                    logging: false
+                                });
+
+                                const imgData = canvas.toDataURL('image/png', 1.0);
+                                
+                                const canvasWidth = canvas.width;
+                                const canvasHeight = canvas.height;
+                                const ratio = canvasWidth / canvasHeight;
+                                
+                                // El ancho siempre se ajusta al A4 para evitar estiramiento horizontal
+                                const finalWidth = a4Width;
+                                // La altura se calcula proporcionalmente al ancho
+                                const finalHeight = a4Width / ratio;
+                                
+                                let heightLeft = finalHeight;
+                                let position = 0;
+
+                                // Primera página de esta sección
+                                if (i > 0) pdf.addPage();
+                                pdf.addImage(imgData, 'PNG', 0, position, finalWidth, finalHeight, undefined, 'FAST');
+                                heightLeft -= a4Height;
+
+                                // Si la sección es más larga que una página A4, dividimos el resto
+                                while (heightLeft > 0.5) { // Pequeño margen de error para evitar páginas blancas vacías
+                                    position = heightLeft - finalHeight;
+                                    pdf.addPage();
+                                    pdf.addImage(imgData, 'PNG', 0, position, finalWidth, finalHeight, undefined, 'FAST');
+                                    heightLeft -= a4Height;
+                                }
+                            }
+                            
+                            pdfBlob = pdf.output('blob');
+                            ghost.innerHTML = '';
+                        }
+                        status.textContent = '¡Conversión exitosa!'; status.className = 'status success'; status.style.display = 'block';
+                        downloadBtn.style.display = 'block'; newConversionBtn.style.display = 'block';
+                    } catch(e) { 
+                        console.error(e);
+                        status.textContent = 'Error: ' + e.message; status.className = 'status error'; status.style.display = 'block'; 
+                        convertBtn.style.display = 'block';
+                    } finally { document.getElementById('loading').style.display = 'none'; }
+                };
+                
+                downloadBtn.onclick = () => { 
+                    const u = URL.createObjectURL(pdfBlob), a = document.createElement('a'); 
+                    a.href=u; a.download = selectedFile.name.replace(/\.[^/.]+$/, '') + '.pdf'; 
+                    a.click(); URL.revokeObjectURL(u);
+                };
+                newConversionBtn.onclick = () => openConverter('text-to-pdf');
+            })();
+        </script>
+    </template>
+
+    <template id="template-pdf-to-word">
+        <style>#fileInput { display: none; }.upload-area { border: 3px dashed #ddd; border-radius: 15px; padding: 40px; cursor: pointer; text-align: center; }.upload-area:hover { border-color: #667eea; }.status { margin:20px 0; padding:15px; border-radius:10px; display:none; }.convert-btn, .download-btn { width:100%; border:none; padding:15px; border-radius:10px; cursor:pointer; margin-top:10px; font-weight:600; display:none; color:white; }.convert-btn { background:#667eea; }.download-btn { background:#4caf50; }</style>
+        <div class="container" style="background: white; padding: 40px; border-radius: 20px; margin-top: 40px;">
+            <button onclick="goHome()" style="background:none; border:none; cursor:pointer; color:#667eea; font-weight:bold; margin-bottom:20px;">← Volver</button>
+            <h2>📝 PDF a Word</h2>
+            <div class="upload-area" id="uploadArea">
+                <div style="font-size: 3rem;">📁</div>
+                <div>Selecciona un archivo PDF</div>
+                <input type="file" id="fileInput" accept="application/pdf">
+            </div>
+            <div id="fileInfo" style="display:none; margin-top:20px;">
+                <b id="fileName"></b>
+            </div>
+            <button id="convertBtn" class="convert-btn">🔄 Convertir a Word</button>
+            <div id="loading" style="display:none; text-align:center;"><div class="spinner" style="margin:20px auto"></div></div>
+            <div id="status" class="status"></div>
+            <button id="downloadBtn" class="download-btn">📥 Descargar Word</button>
+        </div>
+        <script>
+            (function() {
+                const uploadArea = document.getElementById('uploadArea'), fileInput = document.getElementById('fileInput'), convertBtn = document.getElementById('convertBtn'), downloadBtn = document.getElementById('downloadBtn'), status = document.getElementById('status');
+                let selectedFile = null, wordBlob = null;
+                uploadArea.onclick = () => fileInput.click();
+                fileInput.onchange = (e) => {
+                    selectedFile = e.target.files[0];
+                    if (selectedFile) { document.getElementById('fileName').textContent = selectedFile.name; document.getElementById('fileInfo').style.display='block'; convertBtn.style.display='block'; }
+                };
+                convertBtn.onclick = async () => {
+                    convertBtn.style.display = 'none'; document.getElementById('loading').style.display='block';
+                    try {
+                        const loadingTask = pdfjsLib.getDocument({ data: await selectedFile.arrayBuffer() });
+                        const pdf = await loadingTask.promise;
+                        let text = "";
+                        for (let i = 1; i <= pdf.numPages; i++) {
+                            const page = await pdf.getPage(i);
+                            const content = await page.getTextContent();
+                            text += content.items.map(it => it.str).join(' ') + "\n";
+                        }
+                        const doc = new docx.Document({ sections: [{ children: text.split('\n').map(t => new docx.Paragraph({ children: [new docx.TextRun(t)] })) }] });
+                        wordBlob = await docx.Packer.toBlob(doc);
+                        status.textContent = '¡Hecho!'; status.className = 'status success'; status.style.display = 'block';
+                        downloadBtn.style.display = 'block';
+                    } catch(e) { status.textContent = e.message; status.className = 'status error'; status.style.display = 'block'; }
+                    finally { document.getElementById('loading').style.display = 'none'; }
+                };
+                downloadBtn.onclick = () => { const u = URL.createObjectURL(wordBlob), a = document.createElement('a'); a.href=u; a.download='convertido.docx'; a.click(); };
+            })();
+        </script>
+    </template>
+
+    <template id="template-jpg-to-pdf">
+        <style>#fileInput { display: none; }.upload-area { border: 3px dashed #ddd; border-radius: 15px; padding: 40px; cursor: pointer; text-align: center; }.status{padding:15px; border-radius:10px; margin-top:20px; display:none;}.convert-btn, .download-btn{width:100%; padding:15px; border-radius:10px; border:none; cursor:pointer; font-weight:bold; color:white; margin-top:10px; display:none;}.convert-btn{background:#667eea;}.download-btn{background:#4caf50;}</style>
+        <div class="container" style="background: white; padding: 40px; border-radius: 20px; margin-top: 40px;">
+            <button onclick="goHome()" style="background:none; border:none; cursor:pointer; color:#667eea; font-weight:bold; margin-bottom:20px;">← Volver</button>
+            <h2>🖼️ JPG a PDF</h2>
+            <div class="upload-area" id="uploadArea">
+                <div style="font-size: 3rem;">📁</div>
+                <div>Selecciona una o más imágenes</div>
+                <input type="file" id="fileInput" accept="image/*" multiple>
+            </div>
+            <div id="fileInfo" style="display:none; margin-top:20px;">
+                <b id="fileCount"></b> archivos seleccionados
+            </div>
+            <button id="convertBtn" class="convert-btn">🔄 Convertir a PDF</button>
+            <div id="status" class="status"></div>
+            <button id="downloadBtn" class="download-btn">📥 Descargar PDF</button>
+        </div>
+        <script>
+            (function() {
+                const uploadArea = document.getElementById('uploadArea'), fileInput = document.getElementById('fileInput'), convertBtn = document.getElementById('convertBtn'), downloadBtn = document.getElementById('downloadBtn'), status = document.getElementById('status');
+                let files = [], pdfBlob = null;
+                uploadArea.onclick = () => fileInput.click();
+                fileInput.onchange = (e) => {
+                    files = Array.from(e.target.files);
+                    if (files.length) { document.getElementById('fileCount').textContent = files.length; document.getElementById('fileInfo').style.display='block'; convertBtn.style.display='block'; }
+                };
+                convertBtn.onclick = async () => {
+                    const pdfDoc = await PDFLib.PDFDocument.create();
+                    for (const f of files) {
+                        const bytes = await f.arrayBuffer();
+                        const img = f.type === 'image/png' ? await pdfDoc.embedPng(bytes) : await pdfDoc.embedJpg(bytes);
+                        const page = pdfDoc.addPage([img.width, img.height]);
+                        page.drawImage(img, { x: 0, y: 0, width: img.width, height: img.height });
+                    }
+                    pdfBlob = new Blob([await pdfDoc.save()], {type:'application/pdf'});
+                    status.textContent = '¡Éxito!'; status.className = 'status success'; status.style.display='block';
+                    downloadBtn.style.display = 'block'; convertBtn.style.display = 'none';
+                };
+                downloadBtn.onclick = () => { const u = URL.createObjectURL(pdfBlob), a = document.createElement('a'); a.href=u; a.download='imagenes.pdf'; a.click(); };
+            })();
+        </script>
+    </template>
+
+    <template id="template-merge-pdf">
+        <style>.file-item{background:#f8f9fa; padding:10px; margin-bottom:5px; border-radius:5px; display:flex; justify-content:space-between; align-items:center;}#fileInput { display: none; }.convert-btn, .download-btn{width:100%; padding:15px; border-radius:10px; border:none; cursor:pointer; font-weight:bold; color:white; margin-top:10px; display:none;}.convert-btn{background:#667eea;}.download-btn{background:#4caf50;}</style>
+        <div class="container" style="background: white; padding: 40px; border-radius: 20px; margin-top: 40px;">
+            <button onclick="goHome()" style="background:none; border:none; cursor:pointer; color:#667eea; font-weight:bold; margin-bottom:20px;">← Volver</button>
+            <h2>📑 Unir PDF</h2>
+            <div onclick="document.getElementById('fileInput').click()" style="border: 2px dashed #ddd; padding: 30px; text-align: center; cursor: pointer;">Añadir archivos PDF</div>
+            <input type="file" id="fileInput" accept="application/pdf" multiple>
+            <div id="fileList" style="margin-top:20px;"></div>
+            <button id="mergeBtn" class="convert-btn">🔄 Unir PDFs</button>
+            <div id="status" class="status" style="padding:15px; border-radius:10px; margin-top:10px; display:none;"></div>
+            <button id="downloadBtn" class="download-btn">📥 Descargar Unido</button>
+        </div>
+        <script>
+            (function() {
+                const fileInput = document.getElementById('fileInput'), fileList = document.getElementById('fileList'), mergeBtn = document.getElementById('mergeBtn'), downloadBtn = document.getElementById('downloadBtn'), status = document.getElementById('status');
+                let files = [], mergedBlob = null;
+                
+                window.removeFileFromMerge = function(index, btn) {
+                    files.splice(index, 1);
+                    renderFileList();
+                    if (files.length < 2) mergeBtn.style.display = 'none';
+                };
+
+                function renderFileList() {
+                    fileList.innerHTML = '';
+                    files.forEach((f, i) => {
+                        const div = document.createElement('div');
+                        div.className = 'file-item';
+                        div.style.cssText = 'display:flex; justify-content:space-between; align-items:center; background:#f8f9fa; padding:10px 15px; border-radius:8px; margin-bottom:8px; border:1px solid #eee;';
+                        div.innerHTML = `
+                            <span style="font-size:0.9rem; color:#333; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:80%;">${i+1}. ${f.name}</span>
+                            <button onclick="removeFileFromMerge(${i}, this)" style="color:#ff4d4d; background:none; border:none; cursor:pointer; font-weight:bold; font-size:1.2rem; padding:0 5px;">×</button>
+                        `;
+                        fileList.appendChild(div);
                     });
                 }
-            });
-        });
 
-        // Función para abrir convertidores
-        function openConverter(type) {
-            if (type === 'text-to-pdf') {
-                // Abrir el convertidor de texto a PDF básico
-                window.open('text-to-pdf.html', '_blank');
-            } else if (type === 'text-to-pdf-advanced') {
-                // Abrir el convertidor de texto a PDF avanzado
-                window.open('text-to-pdf-advanced.html', '_blank');
-            } else if (type === 'pdf-to-word') {
-                window.open('pdf-to-word.html', '_blank');
-            } else if (type === 'jpg-to-pdf') {
-                window.open('jpg-to-pdf.html', '_blank');
-            } else if (type === 'audio-converter') {
-                window.open('audio-converter.html', '_blank');
-            } else if (type === 'merge-pdf') {
-                window.open('merge-pdf.html', '_blank');
-            }
-        }
+                fileInput.onchange = (e) => {
+                    const newFiles = Array.from(e.target.files);
+                    files = [...files, ...newFiles];
+                    renderFileList();
+                    if (files.length > 1) mergeBtn.style.display = 'block';
+                    fileInput.value = ''; // Reset to allow adding same file again if needed
+                };
 
-        // Animación de entrada para las tarjetas
-        const observerOptions = {
-            threshold: 0.1,
-            rootMargin: '0px 0px -50px 0px'
+                mergeBtn.onclick = async () => {
+                    mergeBtn.style.display = 'none'; 
+                    const loading = document.createElement('div');
+                    loading.innerHTML = '<div class="spinner" style="margin:20px auto"></div><p style="text-align:center">Uniendo archivos...</p>';
+                    fileList.after(loading);
+                    
+                    try {
+                        const mergedPdf = await PDFLib.PDFDocument.create();
+                        for (const f of files) {
+                            const pdf = await PDFLib.PDFDocument.load(await f.arrayBuffer());
+                            const pages = await mergedPdf.copyPages(pdf, pdf.getPageIndices());
+                            pages.forEach(p => mergedPdf.addPage(p));
+                        }
+                        mergedBlob = new Blob([await mergedPdf.save()], {type:'application/pdf'});
+                        loading.remove();
+                        status.textContent = '¡Archivos unidos con éxito!'; 
+                        status.className = 'status success'; 
+                        status.style.display = 'block';
+                        downloadBtn.style.display = 'block';
+                    } catch(e) { 
+                        loading.remove();
+                        status.textContent = 'Error: ' + e.message; 
+                        status.className = 'status error'; 
+                        status.style.display = 'block'; 
+                        mergeBtn.style.display = 'block';
+                    }
+                };
+                downloadBtn.onclick = () => { 
+                    const u = URL.createObjectURL(mergedBlob), a = document.createElement('a'); 
+                    a.href=u; a.download='unido.pdf'; a.click(); 
+                };
+            })();
+        </script>
+    </template>
+
+    <template id="template-audio-converter">
+        <style>.format-btn{padding:10px 20px; border:2px solid #ddd; background:white; cursor:pointer; border-radius:8px;}.format-btn.selected{border-color:#667eea; background:#f0f4ff;}#fileInput{display:none;}.convert-btn, .download-btn{width:100%; padding:15px; border-radius:10px; border:none; cursor:pointer; font-weight:bold; color:white; margin-top:10px; display:none;}.convert-btn{background:#667eea;}.download-btn{background:#4caf50;}</style>
+        <div class="container" style="background: white; padding: 40px; border-radius: 20px; margin-top: 40px;">
+            <button onclick="goHome()" style="background:none; border:none; cursor:pointer; color:#667eea; font-weight:bold; margin-bottom:20px;">← Volver</button>
+            <h2>🎵 Conversor de Audio</h2>
+            <div onclick="document.getElementById('fileInput').click()" style="border: 2px dashed #ddd; padding: 30px; text-align: center; cursor: pointer;">Seleccionar Audio</div>
+            <input type="file" id="fileInput" accept="audio/*">
+            <div id="fileInfo" style="display:none; margin-top:20px;"><b>Archivo:</b> <span id="fileName"></span></div>
+            <div id="formatSel" style="display:none; margin-top:20px;">
+                Convertir a: <button class="format-btn selected" data-fmt="mp3">MP3</button> <button class="format-btn" data-fmt="wav">WAV</button>
+            </div>
+            <button id="convertBtn" class="convert-btn">🔄 Convertir</button>
+            <div id="status" class="status" style="padding:15px; border-radius:10px; margin-top:10px; display:none;"></div>
+            <button id="downloadBtn" class="download-btn">📥 Descargar Audio</button>
+        </div>
+        <script>
+            (function() {
+                const fileInput = document.getElementById('fileInput'), info = document.getElementById('fileInfo'), convertBtn = document.getElementById('convertBtn'), downloadBtn = document.getElementById('downloadBtn'), status = document.getElementById('status'), formatSel = document.getElementById('formatSel');
+                let file = null, blob = null;
+                fileInput.onchange = (e) => {
+                    file = e.target.files[0];
+                    if (file) { document.getElementById('fileName').textContent = file.name; info.style.display='block'; formatSel.style.display='block'; convertBtn.style.display='block'; }
+                };
+                document.querySelectorAll('.format-btn').forEach(b => b.onclick = () => {
+                    document.querySelectorAll('.format-btn').forEach(x => x.classList.remove('selected'));
+                    b.classList.add('selected');
+                });
+                convertBtn.onclick = async () => {
+                    const ctx = new AudioContext(), buf = await ctx.decodeAudioData(await file.arrayBuffer()), fmt = document.querySelector('.format-btn.selected').dataset.fmt;
+                    if (fmt === 'wav') {
+                        const len = buf.length * buf.numberOfChannels * 2, ab = new ArrayBuffer(44 + len), v = new DataView(ab);
+                        v.setUint32(0, 0x52494646); v.setUint32(4, 36 + len, true); v.setUint32(8, 0x57415645); v.setUint32(12, 0x666d7420); v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, buf.numberOfChannels, true); v.setUint32(24, buf.sampleRate, true); v.setUint32(28, buf.sampleRate * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true); v.setUint32(36, 0x64617461); v.setUint32(40, len, true);
+                        const c = buf.getChannelData(0); let o = 44;
+                        for (let i=0; i<c.length; i++) { let s = Math.max(-1, Math.min(1, c[i])); v.setInt16(o, s < 0 ? s * 0x8000 : s * 0x7FFF, true); o += 2; }
+                        blob = new Blob([ab], {type:'audio/wav'});
+                    } else {
+                        const enc = new lamejs.Mp3Encoder(buf.numberOfChannels, buf.sampleRate, 128), c = buf.getChannelData(0), ci = new Int16Array(c.length);
+                        for (let i=0; i<c.length; i++) ci[i] = c[i] < 0 ? c[i] * 0x8000 : c[i] * 0x7FFF;
+                        blob = new Blob([enc.encodeBuffer(ci), enc.flush()], {type:'audio/mp3'});
+                    }
+                    status.textContent = '¡Listo!'; status.className = 'status success'; status.style.display = 'block';
+                    downloadBtn.style.display = 'block'; convertBtn.style.display = 'none';
+                };
+                downloadBtn.onclick = () => { const u = URL.createObjectURL(blob), a = document.createElement('a'); a.href=u; a.download='audio.'+(document.querySelector('.format-btn.selected').dataset.fmt); a.click(); };
+            })();
+        </script>
+    </template>
+
+    <script>
+        const homeView = document.getElementById('home-view');
+        const toolView = document.getElementById('tool-view');
+        const toolStyles = document.getElementById('tool-styles');
+        const globalLoader = document.getElementById('global-loader');
+
+        // Navegación
+        window.onpopstate = (event) => {
+            if (event.state && event.state.tool) loadTemplate(event.state.tool, false);
+            else showHome(false);
         };
 
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.style.opacity = '1';
-                    entry.target.style.transform = 'translateY(0)';
-                }
-            });
-        }, observerOptions);
+        function showHome(pushState = true) {
+            toolView.style.opacity = '0';
+            setTimeout(() => {
+                toolView.style.display = 'none';
+                toolView.innerHTML = '';
+                homeView.style.display = 'block';
+                setTimeout(() => { homeView.style.opacity = '1'; }, 50);
+                toolStyles.innerHTML = '';
+                if (pushState) history.pushState(null, '', 'index.html');
+                window.scrollTo(0, 0);
+                document.title = 'Conversor Universal - Herramientas de Conversión Online';
+            }, 300);
+        }
 
-        // Observar todas las tarjetas de convertidores
-        document.querySelectorAll('.converter-card').forEach(card => {
-            card.style.opacity = '0';
-            card.style.transform = 'translateY(30px)';
-            card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
-            observer.observe(card);
-        });
+        function goHome() { showHome(); }
+
+        function openConverter(name) { loadTemplate(name); }
+
+        function loadTemplate(name, pushState = true) {
+            globalLoader.style.display = 'flex';
+            homeView.style.opacity = '0';
+
+            setTimeout(() => {
+                const template = document.getElementById(`template-${name}`);
+                if (!template) {
+                    globalLoader.style.display = 'none';
+                    alert('Herramienta no encontrada.');
+                    showHome(false);
+                    return;
+                }
+
+                homeView.style.display = 'none';
+                toolView.innerHTML = '';
+                toolStyles.innerHTML = '';
+                
+                const clone = template.content.cloneNode(true);
+                const styles = clone.querySelectorAll('style');
+                styles.forEach(s => toolStyles.appendChild(s));
+                
+                toolView.appendChild(clone);
+                toolView.style.display = 'block';
+                
+                const scripts = toolView.querySelectorAll('script');
+                scripts.forEach(oldScript => {
+                    const newScript = document.createElement('script');
+                    newScript.text = oldScript.text;
+                    document.body.appendChild(newScript);
+                    setTimeout(() => newScript.remove(), 100);
+                });
+
+                document.title = `${name.replace(/-/g, ' ').toUpperCase()} - Premium`;
+                setTimeout(() => { toolView.style.opacity = '1'; globalLoader.style.display = 'none'; }, 50);
+                
+                if (pushState) history.pushState({ tool: name }, '', `?tool=${name}`);
+                window.scrollTo(0, 0);
+            }, 400);
+        }
+
+        // Cargar herramienta si está en URL
+        window.onload = () => {
+            const params = new URLSearchParams(window.location.search);
+            const tool = params.get('tool');
+            if (tool) loadTemplate(tool, false);
+        };
     </script>
 </body>
 </html>
