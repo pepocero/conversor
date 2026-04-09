@@ -421,6 +421,16 @@
                             Convertir
                         </button>
                     </div>
+
+                    <!-- Unir PDF -->
+                    <div class="converter-card">
+                        <div class="converter-icon">📑</div>
+                        <h3 class="converter-title">Unir PDF</h3>
+                        <p class="converter-description">Combina varios archivos PDF en un solo documento de forma rápida y sencilla. Permite elegir el orden de los archivos.</p>
+                        <button class="converter-btn" onclick="openConverter('merge-pdf')">
+                            Unir
+                        </button>
+                    </div>
                     
                     <!-- Conversor de Audio -->
                     <div class="converter-card">
@@ -519,6 +529,8 @@
                 window.open('jpg-to-pdf.html', '_blank');
             } else if (type === 'audio-converter') {
                 window.open('audio-converter.html', '_blank');
+            } else if (type === 'merge-pdf') {
+                window.open('merge-pdf.html', '_blank');
             }
         }
 
