@@ -126,6 +126,12 @@
                             <p class="converter-description">Convierte entre MP3, WAV y otros formatos sin perder calidad sonora.</p>
                             <button class="converter-btn" onclick="openConverter('audio-converter')">Convertir</button>
                         </div>
+                        <div class="converter-card">
+                            <div class="converter-icon">🎬</div>
+                            <h3 class="converter-title">MP4 a MP3</h3>
+                            <p class="converter-description">Extrae el audio de tus vídeos MP4 y conviértelo a MP3 de alta calidad.</p>
+                            <button class="converter-btn" onclick="openConverter('mp4-to-mp3')">Convertir</button>
+                        </div>
                     </div>
                 </div>
             </main>
@@ -594,6 +600,378 @@
                     downloadBtn.style.display = 'block'; convertBtn.style.display = 'none';
                 };
                 downloadBtn.onclick = () => { const u = URL.createObjectURL(blob), a = document.createElement('a'); a.href=u; a.download='audio.'+(document.querySelector('.format-btn.selected').dataset.fmt); a.click(); };
+            })();
+        </script>
+    </template>
+
+    <template id="template-mp4-to-mp3">
+        <style>
+            .upload-area { border: 3px dashed #ddd; border-radius: 15px; padding: 40px; cursor: pointer; text-align: center; transition: 0.3s; }
+            .upload-area:hover, .upload-area.dragover { border-color: #667eea; background: #f0f4ff; }
+            #fileInput { display: none; }
+            .file-meta { display: none; margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 10px; text-align: left; }
+            .file-meta p { margin: 4px 0; color: #555; font-size: 0.95rem; }
+            .quality-sel { display: none; margin-top: 20px; text-align: left; }
+            .quality-sel > span { display: block; margin-bottom: 10px; font-weight: 600; color: #333; }
+            .quality-btns { display: flex; gap: 10px; flex-wrap: wrap; }
+            .quality-btn { padding: 10px 18px; border: 2px solid #ddd; background: white; cursor: pointer; border-radius: 8px; font-weight: 600; }
+            .quality-btn.selected { border-color: #667eea; background: #f0f4ff; color: #667eea; }
+            .status { margin: 20px 0; padding: 15px; border-radius: 10px; display: none; }
+            .status.success { background: #d4edda; color: #155724; }
+            .status.error { background: #f8d7da; color: #721c24; }
+            .convert-btn, .download-btn, .new-conversion-btn { width: 100%; border: none; padding: 15px; border-radius: 10px; cursor: pointer; margin-top: 10px; font-weight: 600; display: none; }
+            .convert-btn { background: #667eea; color: white; }
+            .download-btn { background: #4caf50; color: white; }
+            .new-conversion-btn { background: #6c757d; color: white; }
+            .progress-wrap { display: none; margin: 20px 0; }
+            .progress-bar-bg { height: 10px; background: #eee; border-radius: 10px; overflow: hidden; }
+            .progress-bar-fill { height: 100%; width: 0%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); transition: width 0.2s ease; }
+        </style>
+        <div class="container" style="background: white; padding: 40px; border-radius: 20px; margin-top: 40px; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
+            <button class="back-btn" onclick="goHome()" style="background:none; border:none; cursor:pointer; color:#667eea; font-weight:bold; margin-bottom:20px;">← Volver</button>
+            <h2 style="margin-bottom: 20px;">🎬 MP4 a MP3</h2>
+            <div class="upload-area" id="uploadArea">
+                <div style="font-size: 3rem;">📁</div>
+                <div>Selecciona o arrastra un vídeo MP4</div>
+                <div style="color:#888; font-size:0.9rem; margin-top:8px;">Máximo 200 MB · Hasta 30 minutos</div>
+                <input type="file" id="fileInput" accept="video/mp4,.mp4">
+            </div>
+            <div class="file-meta" id="fileInfo">
+                <p><b id="fileName"></b></p>
+                <p id="fileSize"></p>
+                <p id="fileDuration"></p>
+            </div>
+            <div class="quality-sel" id="qualitySel">
+                <span>Calidad MP3</span>
+                <div class="quality-btns">
+                    <button type="button" class="quality-btn" data-bitrate="128">128 kbps</button>
+                    <button type="button" class="quality-btn selected" data-bitrate="192">192 kbps</button>
+                    <button type="button" class="quality-btn" data-bitrate="320">320 kbps</button>
+                </div>
+            </div>
+            <button id="convertBtn" class="convert-btn">🔄 Convertir a MP3</button>
+            <div id="loading" class="progress-wrap">
+                <div class="spinner" style="margin:0 auto 12px"></div>
+                <p id="loadingTask" style="text-align:center; color:#667eea; font-weight:600;">Preparando audio...</p>
+                <div class="progress-bar-bg"><div class="progress-bar-fill" id="progressFill"></div></div>
+            </div>
+            <div id="status" class="status"></div>
+            <button id="downloadBtn" class="download-btn">📥 Descargar MP3</button>
+            <button id="newConversionBtn" class="new-conversion-btn">✨ Nueva Conversión</button>
+        </div>
+        <script>
+            (function() {
+                const MAX_BYTES = 200 * 1024 * 1024;
+                const MAX_DURATION_SEC = 30 * 60;
+                const LAME_RATES = [8000, 11025, 12000, 16000, 22050, 24000, 32000, 44100, 48000];
+                const MP4_MIMES = ['video/mp4', 'audio/mp4', 'application/mp4', ''];
+
+                const uploadArea = document.getElementById('uploadArea');
+                const fileInput = document.getElementById('fileInput');
+                const fileInfo = document.getElementById('fileInfo');
+                const fileNameEl = document.getElementById('fileName');
+                const fileSizeEl = document.getElementById('fileSize');
+                const fileDurationEl = document.getElementById('fileDuration');
+                const qualitySel = document.getElementById('qualitySel');
+                const convertBtn = document.getElementById('convertBtn');
+                const downloadBtn = document.getElementById('downloadBtn');
+                const newConversionBtn = document.getElementById('newConversionBtn');
+                const status = document.getElementById('status');
+                const loading = document.getElementById('loading');
+                const loadingTask = document.getElementById('loadingTask');
+                const progressFill = document.getElementById('progressFill');
+
+                let selectedFile = null;
+                let mp3Blob = null;
+                let objectUrl = null;
+
+                function showStatus(message, type) {
+                    status.textContent = message;
+                    status.className = 'status ' + type;
+                    status.style.display = 'block';
+                }
+
+                function hideStatus() {
+                    status.style.display = 'none';
+                    status.textContent = '';
+                }
+
+                function formatSize(bytes) {
+                    if (bytes < 1024) return bytes + ' B';
+                    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+                    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+                }
+
+                function formatDuration(seconds) {
+                    if (!isFinite(seconds) || seconds < 0) return 'Duración desconocida';
+                    const s = Math.round(seconds);
+                    const h = Math.floor(s / 3600);
+                    const m = Math.floor((s % 3600) / 60);
+                    const sec = s % 60;
+                    if (h > 0) return h + 'h ' + String(m).padStart(2, '0') + 'm ' + String(sec).padStart(2, '0') + 's';
+                    return m + 'm ' + String(sec).padStart(2, '0') + 's';
+                }
+
+                function isMp4File(file) {
+                    const ext = (file.name.split('.').pop() || '').toLowerCase();
+                    if (ext !== 'mp4') return false;
+                    const mime = (file.type || '').toLowerCase();
+                    return MP4_MIMES.includes(mime) || mime.startsWith('video/');
+                }
+
+                async function hasMp4Signature(file) {
+                    const slice = file.slice(0, 12);
+                    const buf = await slice.arrayBuffer();
+                    if (buf.byteLength < 8) return false;
+                    const bytes = new Uint8Array(buf);
+                    const brand = String.fromCharCode(bytes[4], bytes[5], bytes[6], bytes[7]);
+                    return brand === 'ftyp';
+                }
+
+                function getVideoDuration(file) {
+                    return new Promise((resolve, reject) => {
+                        const video = document.createElement('video');
+                        video.preload = 'metadata';
+                        video.muted = true;
+                        const url = URL.createObjectURL(file);
+                        const cleanup = () => URL.revokeObjectURL(url);
+                        video.onloadedmetadata = () => {
+                            const duration = video.duration;
+                            cleanup();
+                            resolve(duration);
+                        };
+                        video.onerror = () => {
+                            cleanup();
+                            reject(new Error('No se pudo leer el vídeo. Comprueba que sea un MP4 válido.'));
+                        };
+                        video.src = url;
+                    });
+                }
+
+                function floatToInt16(float32) {
+                    const int16 = new Int16Array(float32.length);
+                    for (let i = 0; i < float32.length; i++) {
+                        const s = Math.max(-1, Math.min(1, float32[i]));
+                        int16[i] = s < 0 ? (s * 0x8000) : (s * 0x7FFF);
+                    }
+                    return int16;
+                }
+
+                function pickLameRate(sampleRate) {
+                    if (LAME_RATES.indexOf(sampleRate) !== -1) return sampleRate;
+                    let nearest = LAME_RATES[0];
+                    let best = Math.abs(sampleRate - nearest);
+                    for (let i = 1; i < LAME_RATES.length; i++) {
+                        const d = Math.abs(sampleRate - LAME_RATES[i]);
+                        if (d < best) { best = d; nearest = LAME_RATES[i]; }
+                    }
+                    return nearest;
+                }
+
+                async function resampleIfNeeded(audioBuffer, targetRate) {
+                    if (audioBuffer.sampleRate === targetRate) return audioBuffer;
+                    const channels = Math.min(audioBuffer.numberOfChannels, 2);
+                    const length = Math.ceil(audioBuffer.duration * targetRate);
+                    const offline = new OfflineAudioContext(channels, length, targetRate);
+                    const source = offline.createBufferSource();
+                    source.buffer = audioBuffer;
+                    source.connect(offline.destination);
+                    source.start(0);
+                    return offline.startRendering();
+                }
+
+                async function encodeMp3(audioBuffer, bitrate, onProgress) {
+                    if (typeof lamejs === 'undefined' || !lamejs.Mp3Encoder) {
+                        throw new Error('El codificador MP3 no está disponible. Recarga la página e inténtalo de nuevo.');
+                    }
+                    const channels = Math.min(audioBuffer.numberOfChannels, 2);
+                    const sampleRate = audioBuffer.sampleRate;
+                    const encoder = new lamejs.Mp3Encoder(channels, sampleRate, bitrate);
+                    const left = floatToInt16(audioBuffer.getChannelData(0));
+                    const right = channels === 2 ? floatToInt16(audioBuffer.getChannelData(1)) : null;
+                    const frame = 1152;
+                    const chunks = [];
+                    const total = left.length;
+
+                    for (let i = 0; i < total; i += frame) {
+                        const end = Math.min(i + frame, total);
+                        const leftChunk = left.subarray(i, end);
+                        let mp3buf;
+                        if (channels === 2) {
+                            mp3buf = encoder.encodeBuffer(leftChunk, right.subarray(i, end));
+                        } else {
+                            mp3buf = encoder.encodeBuffer(leftChunk);
+                        }
+                        if (mp3buf && mp3buf.length > 0) chunks.push(new Uint8Array(mp3buf));
+                        if (onProgress) onProgress((end / total) * 100);
+                        if (i > 0 && (i / frame) % 80 === 0) {
+                            await new Promise(resolve => setTimeout(resolve, 0));
+                        }
+                    }
+
+                    const flushed = encoder.flush();
+                    if (flushed && flushed.length > 0) chunks.push(new Uint8Array(flushed));
+                    if (!chunks.length) throw new Error('No se generó audio MP3. El vídeo podría no tener pista de audio.');
+                    return new Blob(chunks, { type: 'audio/mpeg' });
+                }
+
+                function resetResult() {
+                    mp3Blob = null;
+                    if (objectUrl) { URL.revokeObjectURL(objectUrl); objectUrl = null; }
+                    downloadBtn.style.display = 'none';
+                    newConversionBtn.style.display = 'none';
+                    hideStatus();
+                }
+
+                async function handleFile(file) {
+                    if (!file) return;
+                    resetResult();
+                    convertBtn.style.display = 'none';
+                    qualitySel.style.display = 'none';
+                    fileInfo.style.display = 'none';
+
+                    if (!isMp4File(file)) {
+                        showStatus('Selecciona un archivo MP4 válido.', 'error');
+                        return;
+                    }
+                    if (file.size === 0) {
+                        showStatus('El archivo está vacío.', 'error');
+                        return;
+                    }
+                    if (file.size > MAX_BYTES) {
+                        showStatus('El archivo supera el máximo de 200 MB. Usa un vídeo más ligero.', 'error');
+                        return;
+                    }
+
+                    try {
+                        const looksMp4 = await hasMp4Signature(file);
+                        if (!looksMp4) {
+                            showStatus('El archivo no parece un MP4 válido (falta la cabecera ftyp).', 'error');
+                            return;
+                        }
+
+                        const duration = await getVideoDuration(file);
+                        if (isFinite(duration) && duration > MAX_DURATION_SEC) {
+                            showStatus('El vídeo supera los 30 minutos. Divide el archivo en partes más cortas.', 'error');
+                            return;
+                        }
+
+                        selectedFile = file;
+                        fileNameEl.textContent = file.name;
+                        fileSizeEl.textContent = 'Tamaño: ' + formatSize(file.size);
+                        fileDurationEl.textContent = 'Duración: ' + formatDuration(duration);
+                        fileInfo.style.display = 'block';
+                        qualitySel.style.display = 'block';
+                        convertBtn.style.display = 'block';
+                    } catch (err) {
+                        selectedFile = null;
+                        showStatus(err.message || 'No se pudo leer el archivo MP4.', 'error');
+                    }
+                }
+
+                uploadArea.onclick = () => fileInput.click();
+                fileInput.onchange = (e) => handleFile(e.target.files[0]);
+
+                uploadArea.ondragover = (e) => { e.preventDefault(); uploadArea.classList.add('dragover'); };
+                uploadArea.ondragleave = () => uploadArea.classList.remove('dragover');
+                uploadArea.ondrop = (e) => {
+                    e.preventDefault();
+                    uploadArea.classList.remove('dragover');
+                    if (e.dataTransfer.files && e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
+                };
+
+                document.querySelectorAll('.quality-btn').forEach(btn => {
+                    btn.onclick = (e) => {
+                        e.stopPropagation();
+                        document.querySelectorAll('.quality-btn').forEach(b => b.classList.remove('selected'));
+                        btn.classList.add('selected');
+                    };
+                });
+
+                convertBtn.onclick = async () => {
+                    if (!selectedFile) return;
+                    if (typeof lamejs === 'undefined') {
+                        showStatus('El codificador MP3 no está cargado. Recarga la página.', 'error');
+                        return;
+                    }
+
+                    convertBtn.style.display = 'none';
+                    downloadBtn.style.display = 'none';
+                    newConversionBtn.style.display = 'none';
+                    hideStatus();
+                    loading.style.display = 'block';
+                    progressFill.style.width = '0%';
+                    loadingTask.textContent = 'Extrayendo audio del vídeo...';
+
+                    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                    let audioCtx = null;
+
+                    try {
+                        audioCtx = new AudioCtx();
+                        if (audioCtx.state === 'suspended') await audioCtx.resume();
+
+                        const arrayBuffer = await selectedFile.arrayBuffer();
+                        loadingTask.textContent = 'Decodificando pista de audio...';
+                        progressFill.style.width = '8%';
+
+                        let decoded;
+                        try {
+                            decoded = await audioCtx.decodeAudioData(arrayBuffer.slice(0));
+                        } catch (decodeErr) {
+                            throw new Error('No se pudo extraer el audio. El MP4 debe incluir una pista AAC compatible con el navegador (no AC3/DTS).');
+                        }
+
+                        if (!decoded || decoded.length === 0 || decoded.duration === 0) {
+                            throw new Error('El vídeo no contiene una pista de audio utilizable.');
+                        }
+                        if (decoded.duration > MAX_DURATION_SEC) {
+                            throw new Error('El audio extraído supera los 30 minutos.');
+                        }
+
+                        const targetRate = pickLameRate(decoded.sampleRate);
+                        loadingTask.textContent = targetRate !== decoded.sampleRate
+                            ? 'Ajustando frecuencia de muestreo...'
+                            : 'Codificando MP3...';
+                        progressFill.style.width = '15%';
+
+                        const pcm = await resampleIfNeeded(decoded, targetRate);
+                        const bitrate = parseInt(document.querySelector('.quality-btn.selected').dataset.bitrate, 10) || 192;
+
+                        mp3Blob = await encodeMp3(pcm, bitrate, (pct) => {
+                            const mapped = 15 + (pct * 0.85);
+                            progressFill.style.width = mapped.toFixed(1) + '%';
+                            loadingTask.textContent = 'Codificando MP3... ' + Math.round(pct) + '%';
+                        });
+
+                        progressFill.style.width = '100%';
+                        showStatus('¡Conversión exitosa! Ya puedes descargar el MP3.', 'success');
+                        downloadBtn.style.display = 'block';
+                        newConversionBtn.style.display = 'block';
+                    } catch (err) {
+                        console.error(err);
+                        showStatus(err.message || 'Error al convertir el archivo.', 'error');
+                        convertBtn.style.display = 'block';
+                    } finally {
+                        loading.style.display = 'none';
+                        if (audioCtx) {
+                            try { await audioCtx.close(); } catch (e) {}
+                        }
+                    }
+                };
+
+                downloadBtn.onclick = () => {
+                    if (!mp3Blob) return;
+                    if (objectUrl) URL.revokeObjectURL(objectUrl);
+                    objectUrl = URL.createObjectURL(mp3Blob);
+                    const a = document.createElement('a');
+                    a.href = objectUrl;
+                    a.download = selectedFile.name.replace(/\.[^/.]+$/, '') + '.mp3';
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+                };
+
+                newConversionBtn.onclick = () => openConverter('mp4-to-mp3');
             })();
         </script>
     </template>
