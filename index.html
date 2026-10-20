@@ -164,8 +164,8 @@
             .mammoth-content { background: white; padding: 40px; line-height: 1.6; }
             .mammoth-content img { max-width: 100%; height: auto; display: block; margin: 15px auto; }
             
-            .upload-area { border: 3px dashed #ddd; border-radius: 15px; padding: 40px; cursor: pointer; text-align: center; transition: 0.3s; }
-            .upload-area:hover { border-color: #667eea; background: #f0f4ff; }
+            .upload-area { position: relative; display: block; border: 3px dashed #ddd; border-radius: 15px; padding: 40px; cursor: pointer; text-align: center; transition: 0.3s; overflow: hidden; }
+            .upload-area:hover, .upload-area.dragover { border-color: #667eea; background: #f0f4ff; }
             .status { margin: 20px 0; padding: 15px; border-radius: 10px; display: none; }
             .status.success { background: #d4edda; color: #155724; }
             .status.error { background: #f8d7da; color: #721c24; }
@@ -173,7 +173,7 @@
             .convert-btn { background: #667eea; color: white; }
             .download-btn { background: #4caf50; color: white; }
             .new-conversion-btn { background: #6c757d; color: white; }
-            #fileInput { display: none; }
+            #fileInput { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; font-size: 16px; z-index: 2; }
             
             /* Contenedor oculto para renderizado de alta fidelidad */
             #render-ghost { position: absolute; left: -9999px; top: 0; width: 794px; background: #f0f0f0; }
@@ -181,11 +181,12 @@
         <div class="container" style="background: white; padding: 40px; border-radius: 20px; margin-top: 40px; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
             <button class="back-btn" onclick="goHome()" style="background:none; border:none; cursor:pointer; color:#667eea; font-weight:bold; margin-bottom:20px;">← Volver</button>
             <h2 style="margin-bottom: 20px;">📄 Texto a PDF</h2>
-            <div class="upload-area" id="uploadArea">
+            <label class="upload-area" id="uploadArea">
                 <div style="font-size: 3rem;">📁</div>
                 <div>Selecciona o arrastra TXT, DOCX o RTF</div>
-                <input type="file" id="fileInput" accept=".txt,.docx,.rtf">
-            </div>
+                <div style="color:#888; font-size:0.9rem; margin-top:8px;">En el móvil usa Archivos, Descargas o Drive</div>
+                <input type="file" id="fileInput" accept=".txt,.docx,.rtf,text/plain,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/rtf,text/rtf">
+            </label>
             <div id="fileInfo" style="display:none; margin-top:20px; padding:15px; background:#f8f9fa; border-radius:10px;">
                 <b id="fileName"></b> <span id="fileSize"></span>
                 <div class="mode-selector" id="modeSelector">
@@ -208,8 +209,29 @@
             (function() {
                 const uploadArea = document.getElementById('uploadArea'), fileInput = document.getElementById('fileInput'), fileInfo = document.getElementById('fileInfo'), fileName = document.getElementById('fileName'), fileSize = document.getElementById('fileSize'), convertBtn = document.getElementById('convertBtn'), downloadBtn = document.getElementById('downloadBtn'), newConversionBtn = document.getElementById('newConversionBtn'), status = document.getElementById('status'), previewArea = document.getElementById('previewArea'), previewContent = document.getElementById('previewContent');
                 let selectedFile = null, pdfBlob = null, currentMode = 'basic';
-                
-                uploadArea.onclick = () => fileInput.click();
+                const ALLOWED_EXT = ['txt', 'docx', 'rtf'];
+                const ALLOWED_MIME = [
+                    'text/plain',
+                    'application/rtf',
+                    'text/rtf',
+                    'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+                ];
+
+                if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || window.matchMedia('(pointer: coarse)').matches) {
+                    fileInput.setAttribute('accept', '*/*');
+                }
+
+                function fileExt(name) {
+                    const i = (name || '').lastIndexOf('.');
+                    return i === -1 ? '' : name.slice(i + 1).toLowerCase();
+                }
+
+                function isSupportedFile(file) {
+                    const ext = fileExt(file.name);
+                    if (ALLOWED_EXT.indexOf(ext) !== -1) return true;
+                    return ALLOWED_MIME.indexOf((file.type || '').toLowerCase()) !== -1;
+                }
+
                 fileInput.onchange = (e) => handleFile(e.target.files[0]);
                 
                 document.querySelectorAll('.mode-option').forEach(opt => opt.onclick = async () => {
@@ -221,7 +243,19 @@
                 });
 
                 async function handleFile(file) {
-                    if (!file) return; selectedFile = file;
+                    if (!file) return;
+                    if (!isSupportedFile(file)) {
+                        const ext = fileExt(file.name);
+                        status.textContent = ext === 'doc'
+                            ? 'Los .doc antiguos no son compatibles. Abre el archivo en Word y guárdalo como .docx.'
+                            : 'Formato no compatible. Usa TXT, DOCX o RTF.';
+                        status.className = 'status error';
+                        status.style.display = 'block';
+                        fileInput.value = '';
+                        return;
+                    }
+                    status.style.display = 'none';
+                    selectedFile = file;
                     fileName.textContent = file.name; fileSize.textContent = (file.size/1024).toFixed(1) + " KB";
                     fileInfo.style.display = 'block'; convertBtn.style.display = 'block';
                     previewArea.style.display = 'block';
@@ -233,7 +267,7 @@
                     previewContent.innerHTML = '<div style="text-align:center; padding:20px; color:white;">Generando vista previa...</div>';
                     try {
                         const buffer = await selectedFile.arrayBuffer();
-                        if (selectedFile.name.endsWith('.docx')) {
+                        if (fileExt(selectedFile.name) === 'docx') {
                             if (currentMode === 'advanced') {
                                 await docx.renderAsync(buffer, previewContent, null, {
                                     inWrapper: true,
